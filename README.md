@@ -1,20 +1,29 @@
-# **sai-chat-overlay**  
-A lightweight, **Dockerized HTML/JS chat overlay** for OBS that connects to **Streamer.bot WebSocket** and displays **Twitch** and **YouTube** chat messages in a customizable horizontal layout.  
+# sai-chat-overlay
 
-Easily change colors, fonts, message durations, and background styles — all in **real time** — for a perfect fit with your stream’s branding.  
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Docker Image Size](https://img.shields.io/docker/image-size/YOUR_DOCKERHUB_USER/sai-chat-overlay?label=Docker%20Image%20Size)](https://hub.docker.com/r/YOUR_DOCKERHUB_USER/sai-chat-overlay)
+[![Docker Pulls](https://img.shields.io/docker/pulls/YOUR_DOCKERHUB_USER/sai-chat-overlay)](https://hub.docker.com/r/YOUR_DOCKERHUB_USER/sai-chat-overlay)
+[![Issues](https://img.shields.io/github/issues/YOUR_GITHUB_USER/sai-chat-overlay)](https://github.com/YOUR_GITHUB_USER/sai-chat-overlay/issues)
+[![Stars](https://img.shields.io/github/stars/YOUR_GITHUB_USER/sai-chat-overlay?style=social)](https://github.com/YOUR_GITHUB_USER/sai-chat-overlay/stargazers)
+
+![Made with JavaScript](https://img.shields.io/badge/Made%20with-JavaScript-yellow?logo=javascript)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![OBS Studio](https://img.shields.io/badge/OBS%20Studio-302E31?logo=obsstudio&logoColor=white)
+![Google Fonts](https://img.shields.io/badge/Google%20Fonts-Supported-orange)
+![Streamer.bot Ready](https://img.shields.io/badge/Streamer.bot-Ready-blue)
 
 ---
 
-## ✨ Features
-- **Horizontal chat display** with smooth animations.  
-- **Supports Twitch & YouTube** chat messages via Streamer.bot WebSocket.  
-- **Live customization panel** (in preview mode):
-  - Twitch/YouTube accent colors
-  - Message background color & opacity
-  - Message display duration
-  - Font family (Google Fonts integration)
-- **OBS-ready** — works as a Browser Source.  
-- **Dockerized** for easy deployment on Unraid or any Docker-compatible system.  
+## 📖 Description
+`sai-chat-overlay` is a **Dockerized HTML/JS overlay** that connects to the **Streamer.bot WebSocket** to display Twitch and YouTube chat messages in a customizable horizontal layout.  
+
+It supports:
+- 🎨 **Live customization** of colors, fonts, and background opacity  
+- ⏱ Adjustable message fade time  
+- 🖋 Google Fonts integration  
+- 🎥 Easy **OBS Studio** browser source integration
 
 ---
 
