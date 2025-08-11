@@ -1,7 +1,7 @@
 # sai-chat-overlay
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Docker Image Size](https://img.shields.io/docker/image-size/YOUR_DOCKERHUB_USER/sai-chat-overlay?label=Docker%20Image%20Size)](https://hub.docker.com/r/YOUR_DOCKERHUB_USER/sai-chat-overlay)
+[![Docker Image Size](https://img.shields.io/github/package-size/USERNAME/REPO_NAME/sai-chat-overlay?label=GHCR%20Image%20Size)](https://github.com/users/USERNAME/packages/container/sai-chat-overlay)
 [![Docker Pulls](https://img.shields.io/docker/pulls/YOUR_DOCKERHUB_USER/sai-chat-overlay)](https://hub.docker.com/r/YOUR_DOCKERHUB_USER/sai-chat-overlay)
 [![Issues](https://img.shields.io/github/issues/YOUR_GITHUB_USER/sai-chat-overlay)](https://github.com/YOUR_GITHUB_USER/sai-chat-overlay/issues)
 [![Stars](https://img.shields.io/github/stars/YOUR_GITHUB_USER/sai-chat-overlay?style=social)](https://github.com/YOUR_GITHUB_USER/sai-chat-overlay/stargazers)
