@@ -34,43 +34,44 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           npx semantic-release
 
-  docker:
-    needs: release
-    if: contains(github.event.head_commit.message, 'release!')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+docker:
+  needs: release
+  if: contains(github.event.head_commit.message, 'release!')
+  runs-on: ubuntu-latest
+  permissions:
+    contents: read
+    packages: write
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Set up QEMU (for cross-build)
-        uses: docker/setup-qemu-action@v2
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+    - name: Set up Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Login to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 1) Push a SINGLE-PLATFORM image tagged as :latest  ➜ one GHCR "latest" entry
-      - name: Build & push :latest (amd64 only)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/sai-chat-overlay:latest
+    - name: Docker metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository_owner }}/sai-chat-overlay
+        tags: |
+          type=raw,value=latest
+          type=raw,value=${{ needs.release.outputs.version }}
 
-      # 2) Push MULTI-ARCH for the version tag only (no :latest here)
-      - name: Build & push :${{ needs.release.outputs.version }} (multi-arch)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/sai-chat-overlay:${{ needs.release.outputs.version }}
+    - name: Build & push multi-arch (latest + version)
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: true
+        platforms: linux/amd64,linux/arm64
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
