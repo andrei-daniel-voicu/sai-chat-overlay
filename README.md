@@ -1,10 +1,8 @@
 # sai-chat-overlay
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Docker Image Size](https://img.shields.io/docker/image-size/YOUR_DOCKERHUB_USER/sai-chat-overlay?label=Docker%20Image%20Size)](https://hub.docker.com/r/YOUR_DOCKERHUB_USER/sai-chat-overlay)
-[![Docker Pulls](https://img.shields.io/docker/pulls/YOUR_DOCKERHUB_USER/sai-chat-overlay)](https://hub.docker.com/r/YOUR_DOCKERHUB_USER/sai-chat-overlay)
-[![Issues](https://img.shields.io/github/issues/YOUR_GITHUB_USER/sai-chat-overlay)](https://github.com/YOUR_GITHUB_USER/sai-chat-overlay/issues)
-[![Stars](https://img.shields.io/github/stars/YOUR_GITHUB_USER/sai-chat-overlay?style=social)](https://github.com/YOUR_GITHUB_USER/sai-chat-overlay/stargazers)
+![GitHub Release](https://img.shields.io/github/v/release/andrei-daniel-voicu/sai-chat-overlay)
+[![Issues](https://img.shields.io/github/issues/andrei-daniel-voicu/sai-chat-overlay)](https://github.com/YOUR_GITHUB_USER/sai-chat-overlay/issues)
 
 ![Made with JavaScript](https://img.shields.io/badge/Made%20with-JavaScript-yellow?logo=javascript)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
@@ -32,4 +30,16 @@ It supports:
 ### 1. Clone this repository
 ```bash
 git clone https://github.com/yourusername/sai-chat-overlay.git
-cd sai-chat-overlay
+cd sai-chat-overlay 
+```
+
+### 2. Build Docker image locally (optional)
+```bash
+docker build -t yourdockerhubuser/sai-chat-overlay:latest .
+```
+
+### 3. Run Docker container locally
+```bash
+docker pull ghcr.io/andrei-daniel-voicu/sai-chat-overlay:latest
+docker run -d -p 8080:80 ghcr.io/andrei-daniel-voicu/sai-chat-overlay:latest
+```
