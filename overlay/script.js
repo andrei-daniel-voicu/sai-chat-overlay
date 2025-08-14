@@ -163,7 +163,6 @@ ws.onmessage = (event) => {
     let badges = [];
     if (packet?.data?.user?.badges && Array.isArray(packet.data.user.badges)) {
         badges = packet.data.user.badges.map(badge => badge.imageUrl)
-        console.log("Badges:", badges);
     }
 
     // Twitch chat
@@ -177,82 +176,154 @@ ws.onmessage = (event) => {
     }
 };
 
-function animateRemoveMessage(msgElement, extraOffset = 20, callback) {
-    msgElement.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
+// ---- constants ----
+const GAP_PX = 10;
+const ANIM_MS = 500; // keep in sync with CSS if any
 
-    msgElement.style.transform = `translateX(-${msgElement.offsetWidth + extraOffset}px)`;
-    msgElement.style.opacity = '0';
-    msgElement.addEventListener('transitionend', function handler(e) {
-        if (e.propertyName === 'transform') {
-            msgElement.removeEventListener('transitionend', handler);
-            if (msgElement.parentNode) msgElement.parentNode.removeChild(msgElement);
-            if (callback) callback();
-        }
+// ---- helper: shift all following siblings left by `distance` in perfect sync ----
+function shiftFollowingSiblingsLeft(target, distance) {
+  const all = Array.from(chat.children);
+  const index = all.indexOf(target);
+  if (index === -1) return () => {};
+
+  const toMove = all.slice(index + 1);
+
+  // Prime phase: freeze current state and tag nodes as shifting
+  toMove.forEach(msg => {
+    msg.classList.add('shifting');
+    msg.style.transition = 'none';
+    const t = getComputedStyle(msg).transform;
+    msg.style.transform = (t === 'none') ? 'translate3d(0,0,0)' : t;
+    msg.style.opacity = '1'; // ensure no accidental fade on siblings
+  });
+
+  // Commit priming
+  void chat.offsetWidth;
+
+  // Enable transitions next frame, then set targets the frame after
+  requestAnimationFrame(() => {
+    toMove.forEach(msg => {
+      msg.style.transition = `transform ${ANIM_MS}ms ease`;
     });
+    requestAnimationFrame(() => {
+      toMove.forEach(msg => {
+        msg.style.transform = `translate3d(-${distance}px, 0, 0)`;
+      });
+    });
+  });
+
+  // Cleanup returns a function that resets only nodes we tagged
+  return () => {
+    // Only reset nodes that are still shifting and still in the DOM
+    const shiftingNow = Array.from(chat.querySelectorAll('.shifting'));
+    shiftingNow.forEach(msg => {
+      msg.style.transition = 'none';
+      msg.style.transform = 'translate3d(0,0,0)';
+      msg.style.opacity = '1';
+      msg.classList.remove('shifting');
+    });
+    // Commit reset, then allow future transitions
+    void chat.offsetWidth;
+    shiftingNow.forEach(msg => { msg.style.transition = ''; });
+  };
 }
 
+// ---- unified removal: slide/fade the target and shift siblings in parallel ----
+function animateRemoveMessage(msgElement, extraOffset = GAP_PX, callback) {
+  // Guard: prevent double-removal races
+  if (msgElement.dataset.removing === '1') return;
+  msgElement.dataset.removing = '1';
+
+  const width = msgElement.offsetWidth + extraOffset;
+
+  // Start siblings shift immediately (returns cleanup function)
+  const cleanupSibs = shiftFollowingSiblingsLeft(msgElement, width);
+
+  // Animate the removed item out in parallel
+  msgElement.style.transition = `transform ${ANIM_MS}ms ease, opacity ${ANIM_MS}ms ease`;
+  // Ensure layout is committed, then animate
+  void msgElement.offsetWidth;
+  msgElement.style.transform = `translate3d(-${width}px, 0, 0)`;
+  msgElement.style.opacity = '0';
+
+  // Finish exactly when the transitions end (fallback timer)
+  const done = () => {
+    // Idempotent: in case something else already removed it
+    if (msgElement.parentNode) msgElement.parentNode.removeChild(msgElement);
+    msgElement.dataset.removing = '';
+    cleanupSibs();
+    if (typeof callback === 'function') callback();
+  };
+
+  // Prefer transitionend to be precise; fallback to timeout
+  let finished = false;
+  const onEnd = (e) => {
+    if (finished) return;
+    if (e.target !== msgElement) return;
+    if (e.propertyName !== 'transform') return;
+    finished = true;
+    msgElement.removeEventListener('transitionend', onEnd);
+    done();
+  };
+  msgElement.addEventListener('transitionend', onEnd);
+  setTimeout(() => {
+    if (!finished) {
+      msgElement.removeEventListener('transitionend', onEnd);
+      done();
+    }
+  }, ANIM_MS + 50);
+}
+
+// ---- overflow compaction: reuse the same coordinated removal ----
+let isCompacting = false;
+function compactOverflow() {
+  if (isCompacting) return;
+  if (chat.children.length <= 10) return;
+
+  isCompacting = true;
+
+  // Always remove the first message and shift the rest simultaneously
+  const first = chat.firstElementChild;
+  if (!first) { isCompacting = false; return; }
+
+  animateRemoveMessage(first, GAP_PX, () => {
+    isCompacting = false;
+    // If more arrived during the animation, run again
+    if (chat.children.length > 10) compactOverflow();
+  });
+}
+
+// ---- addMessage: ensure consistent slide-in and compact on overflow ----
 function addMessage(user, message, platform, badges) {
-    const div = document.createElement("div");
-    div.className = `msg ${platform.toLowerCase()}`;
+  const div = document.createElement("div");
+  div.className = `msg ${platform.toLowerCase()}`;
 
-    // Generate badges HTML if any
-    let badgesHTML = '';
-    if (badges && badges.length) {
-        badgesHTML = badges.map(badgeUrl =>
-            `<img src="${badgeUrl}" alt="badge" class="badge" />`
-        ).join('');
-    }
+  let badgesHTML = '';
+  if (badges && badges.length) {
+    badgesHTML = badges.map(url => `<img src="${url}" alt="badge" class="badge" />`).join('');
+  }
 
-    div.innerHTML = `${badgesHTML}<span class="user">${user}:</span> ${message}`;
-    chat.appendChild(div);
+  div.innerHTML = `${badgesHTML}<span class="user">${user}:</span> ${message}`;
 
-    // Force reflow to apply initial style (translateX(100%))
-    void div.offsetWidth;
+  // Ensure slide-in initial state (even if CSS doesn't define it)
+  div.style.transition = 'transform 300ms ease';
+  div.style.transform = 'translate3d(100%, 0, 0)';
+  div.style.opacity = '1';
 
-    // Animate new message entrance (translateX(0))
-    div.style.transform = 'translateX(0)';
+  chat.appendChild(div);
 
-    // Calculate total width occupied by all messages, including gap
-    let totalWidth = 0;
-    for (let child of chat.children) {
-        totalWidth += child.offsetWidth + 10; // 10px gap
-    }
-    totalWidth -= 10; // No gap after the last message
+  // Commit initial transform, then slide to 0
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      div.style.transform = 'translate3d(0, 0, 0)';
+    });
+  });
 
-    const containerWidth = chat.clientWidth;
+  // Auto-remove after fadeTime using the unified coordinated removal
+  setTimeout(() => {
+    if (div.parentNode) animateRemoveMessage(div);
+  }, fadeTime);
 
-    // If totalWidth exceeds container, move messages to the left
-    if (totalWidth > containerWidth) {
-        const overflow = totalWidth - containerWidth;
-        const firstMsg = chat.children[0];
-
-        // 1. Animate all messages to the left
-        for (let msg of chat.children) {
-            msg.style.transition = 'transform 0.5s ease';
-            msg.style.transform = `translateX(${-overflow}px)`;
-        }
-
-        // 2. After transition ends, animate the first message exit separately
-        firstMsg.addEventListener('transitionend', function handler(e) {
-            if (e.propertyName !== 'transform') return;
-            firstMsg.removeEventListener('transitionend', handler);
-            animateRemoveMessage(firstMsg, overflow + 10, () => {
-                // Resetăm poziția celorlalte mesaje
-                for (let msg of chat.children) {
-                    msg.style.transition = 'transform 0.5s ease';
-                    msg.style.transform = 'translateX(0)';
-                }
-            });
-        });
-    }
-
-    // Auto-remove after fadeTime (if still present)
-    setTimeout(() => {
-        if (div.parentNode) animateRemoveMessage(div);
-    }, fadeTime);
-
-    // Limit to 10 messages
-    while (chat.children.length > 10) {
-        animateRemoveMessage(chat.firstChild);
-    }
+  // Compact on overflow
+  compactOverflow();
 }
