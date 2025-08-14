@@ -7,6 +7,7 @@ on:
 
 jobs:
   release:
+    if: contains(github.event.head_commit.message, 'release!')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.semantic.outputs.version }}
@@ -35,6 +36,7 @@ jobs:
 
   docker:
     needs: release
+    if: contains(github.event.head_commit.message, 'release!')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -53,11 +55,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image
-        uses: docker/build-push-action@v4
+      # 1) Push a SINGLE-PLATFORM image tagged as :latest  ➜ one GHCR "latest" entry
+      - name: Build & push :latest (amd64 only)
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
+          platforms: linux/amd64
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/sai-chat-overlay:latest
+
+      # 2) Push MULTI-ARCH for the version tag only (no :latest here)
+      - name: Build & push :${{ needs.release.outputs.version }} (multi-arch)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/${{ github.repository_owner }}/sai-chat-overlay:${{ needs.release.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/sai-chat-overlay:latest
