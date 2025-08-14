@@ -177,6 +177,20 @@ ws.onmessage = (event) => {
     }
 };
 
+function animateRemoveMessage(msgElement, extraOffset = 20, callback) {
+    msgElement.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
+
+    msgElement.style.transform = `translateX(-${msgElement.offsetWidth + extraOffset}px)`;
+    msgElement.style.opacity = '0';
+    msgElement.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName === 'transform') {
+            msgElement.removeEventListener('transitionend', handler);
+            if (msgElement.parentNode) msgElement.parentNode.removeChild(msgElement);
+            if (callback) callback();
+        }
+    });
+}
+
 function addMessage(user, message, platform, badges) {
     const div = document.createElement("div");
     div.className = `msg ${platform.toLowerCase()}`;
@@ -219,37 +233,26 @@ function addMessage(user, message, platform, badges) {
         }
 
         // 2. After transition ends, animate the first message exit separately
-        const onTransitionEnd = (event) => {
-            // Ensure it's the firstMsg that finished transform transition
-            if (event.propertyName !== 'transform' || event.target !== firstMsg) return;
-            firstMsg.removeEventListener('transitionend', onTransitionEnd);
-
-            // Animate first message disappearing (move left + opacity)
-            firstMsg.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
-            firstMsg.style.transform = `translateX(${-overflow - firstMsg.offsetWidth - 10}px)`;
-            firstMsg.style.opacity = '0';
-
-            // After animation, remove it and reset positions
-            setTimeout(() => {
-                if (firstMsg.parentNode) firstMsg.parentNode.removeChild(firstMsg);
-
+        firstMsg.addEventListener('transitionend', function handler(e) {
+            if (e.propertyName !== 'transform') return;
+            firstMsg.removeEventListener('transitionend', handler);
+            animateRemoveMessage(firstMsg, overflow + 10, () => {
+                // Resetăm poziția celorlalte mesaje
                 for (let msg of chat.children) {
                     msg.style.transition = 'transform 0.5s ease';
                     msg.style.transform = 'translateX(0)';
                 }
-            }, 500);
-        };
-
-        firstMsg.addEventListener('transitionend', onTransitionEnd);
+            });
+        });
     }
 
     // Auto-remove after fadeTime (if still present)
     setTimeout(() => {
-        if (div.parentNode) div.parentNode.removeChild(div);
+        if (div.parentNode) animateRemoveMessage(div);
     }, fadeTime);
 
     // Limit to 10 messages
-    if (chat.children.length > 10) {
-        chat.removeChild(chat.firstChild);
+    while (chat.children.length > 10) {
+        animateRemoveMessage(chat.firstChild);
     }
 }
