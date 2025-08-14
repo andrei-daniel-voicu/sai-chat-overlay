@@ -47,10 +47,10 @@ fontSelect.value = 'Poppins';
 document.documentElement.style.setProperty('--chat-font-family', `'Poppins', sans-serif`);
 
 const params = new URLSearchParams(window.location.search);
-const isPreview = params.get("preview").toLowerCase() === "true";
+const isEdit = (params.get("edit") || "false").toLowerCase() === "true";
 const settingsPanel = document.getElementById("settingsPanel");
 
-if (isPreview) settingsPanel.style.display = "block";
+if (isEdit) settingsPanel.style.display = "block";
 
 // Load settings from URL params or defaults
 const twitchColorInput = document.getElementById('twitchColor');
@@ -116,7 +116,7 @@ document.getElementById('copyUrlBtn').addEventListener('click', () => {
     const baseUrl = window.location.origin + window.location.pathname;
 
     const urlParams = new URLSearchParams({
-        preview: 'false',         // so settings panel does NOT show in OBS
+        edit: 'false',
         twitchColor: twitchColorInput.value,
         youtubeColor: youtubeColorInput.value,
         msgBgColor: msgBgColorInput.value,
