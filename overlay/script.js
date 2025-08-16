@@ -179,8 +179,8 @@ ws.onmessage = (event) => {
     }
 
     // Youtube chat
-    if (packet?.event?.source === "Youtube") {
-        addMessage(packet.data.user.name, packet.data.message.message, "youtube", badges);
+    if (packet?.event?.source === "YouTube") {
+        addMessage(packet.data.user.name, packet.data.message, "youtube", badges);
     }
 };
 
