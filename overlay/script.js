@@ -50,7 +50,15 @@ const params = new URLSearchParams(window.location.search);
 const isEdit = (params.get("edit") || "false").toLowerCase() === "true";
 const settingsPanel = document.getElementById("settingsPanel");
 
-if (isEdit) settingsPanel.style.display = "block";
+const settingsToggle = document.getElementById("settingsToggle");
+
+if (isEdit) {
+    settingsPanel.style.display = "block";
+    settingsToggle.style.display = "block";
+} else {
+    settingsPanel.style.display = "none";
+    settingsToggle.style.display = "none";
+}
 
 // Load settings from URL params or defaults
 const twitchColorInput = document.getElementById('twitchColor');
